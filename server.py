@@ -4,9 +4,12 @@ import typing
 
 from flask import Flask
 from flask import request
+from gevent.pywsgi import WSGIServer
+from gevent import monkey
 
 
 def run_server(handlers: typing.Dict):
+    # monkey.patch_all()
     app = Flask("Battlesnake")
 
     @app.get("/")
@@ -37,10 +40,9 @@ def run_server(handlers: typing.Dict):
         )
         return response
 
-    host = "0.0.0.0"
-    port = int(os.environ.get("PORT", "8000"))
-
-    logging.getLogger("werkzeug").setLevel(logging.ERROR)
-
-    print(f"\nRunning Battlesnake at http://{host}:{port}")
-    app.run(host=host, port=port)
+    app.debug = True
+    port = int(os.environ["PORT"]) if "PORT" in os.environ else 8080
+    http = WSGIServer(('0.0.0.0', port), app.wsgi_app)
+    print(f"Starting Server on Port {port}")
+    
+    http.serve_forever()
