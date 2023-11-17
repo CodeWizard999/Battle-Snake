@@ -1,0 +1,40 @@
+name: Deploy Branch to Railway fiz
+
+on:
+  push:
+    branches:
+      - 'main'
+
+permissions:
+  contents: read
+
+env:
+  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+jobs:
+  deploy:
+    name: Set up new Railway service for branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Deploy to branch
+        run: railway up -ds ${{ github.head_ref || github.ref_name }}
+
+      - name: Wait for pod to spin up
+        uses: juliangruber/sleep-action@v2.0.0
+        with:
+          time: 30s
+
+      - name: echo link to branch deployment
+        run: |
+          echo 'finished deploying to https://battleSSnake-${{ github.head_ref || github.ref_name }}.up.railway.app/'
